@@ -8,9 +8,10 @@ import androidx.lifecycle.ViewModel
 
 class MainViewModel : ViewModel() {
 
-    val values = mutableStateListOf<Int>()
+    val values = mutableStateListOf<Pair<Int, String>>()
 
     var page: Pages by mutableStateOf(Pages.MAIN)
+    var showDialog by mutableStateOf(false)
 
     fun toList(){
         page = Pages.LIST
@@ -21,7 +22,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun addValue(){
-        if (values.isEmpty()) values.add(1)
-        else values.add(values.last() + 1)
+        if (values.isEmpty()) values.add(1 to "text")
+        else values.add((values.last().first + 1) to "text")
     }
 }
