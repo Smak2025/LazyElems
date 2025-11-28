@@ -3,7 +3,10 @@ package ru.smak.lazyelems
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,8 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.smak.lazyelems.db.Card
 import ru.smak.lazyelems.ui.theme.LazyElemsTheme
 import ru.smak.lazyelems.viewmodels.MainViewModel
 import ru.smak.lazyelems.viewmodels.Pages
@@ -62,7 +64,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+        enableEdgeToEdge()
         setContent {
             LazyElemsTheme {
                 Scaffold(
@@ -96,11 +98,11 @@ class MainActivity : ComponentActivity() {
                     floatingActionButton = {
                         if (viewModel.page == Pages.LIST) {
                             FloatingActionButton(onClick = {
-                                //viewModel.addValue()
+                                //viewModel.addValue("some text")
                                 viewModel.showDialog = true
                             }) {
                                 Icon(
-                                    Icons.Default.Add,
+                                    painterResource(R.drawable.baseline_add_24),
                                     contentDescription = stringResource(R.string.add)
                                 )
                             }
@@ -108,23 +110,36 @@ class MainActivity : ComponentActivity() {
                     },
                     floatingActionButtonPosition = FabPosition.EndOverlay,
                 ) { innerPadding ->
-                    when (viewModel.page) {
-                        Pages.MAIN -> MainContent(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxSize()
-                        ){
-                            viewModel.toList()
+                    Crossfade(
+                        targetState = viewModel.page,
+                        animationSpec = tween(500),
+                    ) { page ->
+                        when (page) {
+                            Pages.MAIN -> MainContent(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .fillMaxSize()
+                            ) {
+                                viewModel.toList()
+                            }
+
+                            Pages.LIST -> ListContent(
+                                viewModel.values,
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .padding(innerPadding)
+                                    .fillMaxSize()
+                            )
                         }
-                        Pages.LIST -> ListContent(
-                            viewModel.values,
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .fillMaxSize()
-                        )
                     }
-                    if (viewModel.showDialog){
-                        TextDialog()
+                    if (viewModel.showDialog) {
+                        TextDialog(
+                            onDismiss = { viewModel.showDialog = false },
+                            onSave = { title, text ->
+                                viewModel.addValue(title, text)
+                                viewModel.showDialog = false
+                            }
+                        )
                     }
                 }
             }
@@ -153,11 +168,11 @@ fun MainContent(
 
 @Composable
 fun ListContent(
-    list: List<Pair<Int, String>>,
+    list: List<Card>,
     modifier: Modifier = Modifier,
 ){
     Column(
-        modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -181,30 +196,37 @@ fun ListContent(
 fun ListContentPreview(){
     LazyElemsTheme {
         ListContent(
-            listOf(1 to "some text 1", 2 to "some text 2", 3 to "some text 2", 4 to "some text 4. it will be a long text"),
-            modifier = Modifier.fillMaxSize()
+            listOf(
+//                1 to "some text 1",
+//                2 to "some text 2",
+//                3 to "some text 3",
+//                4 to "some text 4. It will be a long text",
+//                5 to "some text 5",
+//                6 to "some text 6",
+            ),
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer)
         )
     }
 }
 
 @Composable
 fun CardWithValue(
-    value: Pair<Int, String>,
+    value: Card,
     modifier: Modifier = Modifier,
 ){
     ElevatedCard(
         modifier = modifier
     ) {
         Text(
-            value.first.toString(),
+            value.title,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             textAlign = TextAlign.Center,
             fontSize = 24.sp,
             fontWeight = FontWeight.Black,
         )
-        HorizontalDivider(Modifier.fillMaxWidth(), 1.dp)
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), 1.dp)
         Text(
-            value.second,
+            value.text,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             textAlign = TextAlign.Start,
             fontSize = 14.sp,
@@ -217,42 +239,52 @@ fun CardWithValue(
 @Composable
 fun CardWithValuePreview(){
     LazyElemsTheme {
-        CardWithValue(3 to "text", modifier = Modifier.fillMaxWidth())
+        //CardWithValue(3 to "some text", modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable
 fun TextDialog(
     modifier: Modifier = Modifier,
+    onDismiss: ()->Unit = {},
+    onSave: (String, String)->Unit = { _, _ -> },
 ){
-    var userText by remember {mutableStateOf("")}
+    var userTitle by remember { mutableStateOf("") }
+    var userText by remember { mutableStateOf("") }
     AlertDialog(
-        onDismissRequest = {
-
-        },
+        modifier = modifier,
+        onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
-
-            }) {
+                onSave(userTitle, userText)
+            }){
                 Text("Ок")
             }
         },
-        title = {
-            Text("Введите текст:")
-        },
         text = {
-            OutlinedTextField(
-                value = userText,
-                onValueChange = {},
-            )
-        }
+            Column {
+                OutlinedTextField(
+                    value = userTitle,
+                    onValueChange = {
+                        userTitle = it
+                    }
+                )
+                OutlinedTextField(
+                    value = userText,
+                    onValueChange = {
+                        userText = it
+                    }
+                )
+            }
+        },
     )
 }
+
 
 @Preview
 @Composable
 fun TextDialogPreview(){
-    LazyElemsTheme { 
+    LazyElemsTheme {
         TextDialog()
     }
 }
