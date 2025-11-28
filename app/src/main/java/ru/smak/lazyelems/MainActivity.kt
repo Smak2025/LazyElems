@@ -55,6 +55,8 @@ import ru.smak.lazyelems.db.Card
 import ru.smak.lazyelems.ui.theme.LazyElemsTheme
 import ru.smak.lazyelems.viewmodels.MainViewModel
 import ru.smak.lazyelems.viewmodels.Pages
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
@@ -181,7 +183,7 @@ fun ListContent(
         } else {
             LazyVerticalStaggeredGrid(
                 modifier = Modifier.fillMaxSize(),
-                columns = StaggeredGridCells.Adaptive(128.dp),
+                columns = StaggeredGridCells.Adaptive(240.dp),
             ) {
                 items(list.reversed()){ item ->
                     CardWithValue(item, modifier = Modifier.fillMaxWidth().padding(8.dp))
@@ -214,6 +216,8 @@ fun CardWithValue(
     value: Card,
     modifier: Modifier = Modifier,
 ){
+    val dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+    val date = dateTimeFormatter.format(value.modificationDate)
     ElevatedCard(
         modifier = modifier
     ) {
@@ -232,6 +236,13 @@ fun CardWithValue(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
         )
+        Text(
+            text = date,
+            textAlign = TextAlign.End,
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            fontSize = 10.sp,
+            color = MaterialTheme.colorScheme.secondary,
+        )
     }
 }
 
@@ -239,6 +250,7 @@ fun CardWithValue(
 @Composable
 fun CardWithValuePreview(){
     LazyElemsTheme {
+        CardWithValue(Card(title = "Title", text = "Text"))
         //CardWithValue(3 to "some text", modifier = Modifier.fillMaxWidth())
     }
 }

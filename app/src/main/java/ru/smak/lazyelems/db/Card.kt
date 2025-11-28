@@ -3,6 +3,7 @@ package ru.smak.lazyelems.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDateTime
 
 @Entity(tableName = "card")
 data class Card(
@@ -11,4 +12,6 @@ data class Card(
     @ColumnInfo(name = "title")
     var title: String,
     var text: String,
+    @ColumnInfo(name = "modification_date")
+    var modificationDate: LocalDateTime = LocalDateTime.now()
 )
