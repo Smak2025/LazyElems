@@ -20,7 +20,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var page: Pages by mutableStateOf(Pages.MAIN)
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             CardDatabase.getDb(getApplication()).getAllCards().collect { it ->
                 values.apply {
                     clear()
@@ -39,7 +39,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun addValue(title: String, text: String){
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             CardDatabase.getDb(getApplication()).addCard(
                 Card(title = title, text = text)
             )
