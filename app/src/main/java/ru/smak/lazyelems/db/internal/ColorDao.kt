@@ -17,17 +17,17 @@ interface ColorDao {
     @Delete
     suspend fun remove(color: CardColor)
 
-    @Query("SELECT * FROM colors")
+    @Query("SELECT * FROM card_color")
     fun getAll(): Flow<List<CardColor>>
 
-    @Query("SELECT * FROM colors WHERE id = :id")
+    @Query("SELECT * FROM card_color WHERE id = :id")
     suspend fun get(id: Int): CardColor?
 
-    @Query("SELECT * FROM colors WHERE color = :value")
+    @Query("SELECT * FROM card_color WHERE color = :value")
     suspend fun get(value: Color): CardColor?
 
     @Transaction
-    @Query("SELECT * FROM colors JOIN card WHERE colors.id = :colorId")
+    @Query("SELECT * FROM card_color JOIN card WHERE card_color.id = :colorId")
     fun getAllCardsByColorId(colorId: Int): Flow<ColoredCards>?
 
 }

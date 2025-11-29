@@ -10,8 +10,7 @@ data class ColoredCards(
     var cardColor: CardColor,
     @Relation(
         parentColumn = "id",
-        entityColumn = "colorId"
+        entityColumn = "color_id"
     )
     val cards: List<Card>
-
 )

@@ -11,13 +11,13 @@ import java.time.LocalDateTime
 @Entity(
     tableName = "card",
     indices = [
-        Index("colorId", name = "color_idx", unique = false)
+        Index("color_id", name = "color_idx", unique = false)
     ],
     foreignKeys = [
         ForeignKey(
             CardColor::class,
             ["id"],
-            ["colorId"],
+            ["color_id"],
             onDelete = ForeignKey.RESTRICT,
             onUpdate = CASCADE,
         )
@@ -29,6 +29,7 @@ data class Card(
     @ColumnInfo(name = "title")
     var title: String,
     var text: String,
+    @ColumnInfo(name = "color_id")
     var colorId: Int = 0,
     @ColumnInfo(name = "modification_date")
     var modified: LocalDateTime = LocalDateTime.now()

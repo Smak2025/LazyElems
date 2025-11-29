@@ -1,9 +1,7 @@
 package ru.smak.lazyelems.db
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.last
 import ru.smak.lazyelems.db.internal.Card
 import ru.smak.lazyelems.db.internal.CardColor
 import ru.smak.lazyelems.db.internal.CardDao

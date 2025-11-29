@@ -7,7 +7,7 @@ data class CardInfo(
     @Embedded
     var card: Card,
     @Relation(
-        parentColumn = "colorId",
+        parentColumn = "color_id",
         entityColumn = "id"
     )
     var cardColor: CardColor?

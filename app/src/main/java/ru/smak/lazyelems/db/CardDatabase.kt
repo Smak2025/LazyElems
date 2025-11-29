@@ -11,6 +11,7 @@ import ru.smak.lazyelems.db.internal.CardDao
 import ru.smak.lazyelems.db.internal.ColorConverter
 import ru.smak.lazyelems.db.internal.ColorDao
 import ru.smak.lazyelems.db.internal.DateTimeConverter
+import ru.smak.lazyelems.db.internal.migrations.MIGRATION_1_2
 
 @Database(entities = [Card::class, CardColor::class], version = 2, exportSchema = false)
 @TypeConverters(DateTimeConverter::class, ColorConverter::class)
@@ -28,7 +29,9 @@ abstract class CardDatabase: RoomDatabase(){
                     context,
                     CardDatabase::class.java,
                     "db_cards"
-                ).build()
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
             }
             return instance
         }
