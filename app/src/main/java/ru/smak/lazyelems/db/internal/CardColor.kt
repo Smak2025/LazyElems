@@ -1,4 +1,4 @@
-package ru.smak.lazyelems.db
+package ru.smak.lazyelems.db.internal
 
 import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
@@ -8,5 +8,5 @@ import androidx.room.PrimaryKey
 data class CardColor(
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0,
-    val value: Color = Color.Unspecified,
+    val color: Color = Color.Unspecified,
 )

@@ -5,23 +5,32 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import ru.smak.lazyelems.db.internal.Card
+import ru.smak.lazyelems.db.internal.CardColor
+import ru.smak.lazyelems.db.internal.CardDao
+import ru.smak.lazyelems.db.internal.ColorConverter
+import ru.smak.lazyelems.db.internal.ColorDao
+import ru.smak.lazyelems.db.internal.DateTimeConverter
 
-@Database(entities = [Card::class, CardColor::class], version = 2, exportSchema = true)
+@Database(entities = [Card::class, CardColor::class], version = 2, exportSchema = false)
 @TypeConverters(DateTimeConverter::class, ColorConverter::class)
-abstract class CardDatabase : RoomDatabase(){
+abstract class CardDatabase: RoomDatabase(){
     abstract fun cardsDao(): CardDao
     abstract fun colorsDao(): ColorDao
 
     companion object {
-        private var instance: CardDatabase? = null
+        @Volatile
+        private lateinit var instance: CardDatabase
 
-        val cardsDao: CardDao? get() = instance?.cardsDao()
-        val colorDao: ColorDao? get() = instance?.colorsDao()
-
-        fun initDb(context: Context) = instance ?: Room.databaseBuilder(
-            context,
-            CardDatabase::class.java,
-            "db_cards"
-        ).build().also { instance = it }
+        fun getInstance(context: Context): CardDatabase {
+            if (!::instance.isInitialized) {
+                instance = Room.databaseBuilder(
+                    context,
+                    CardDatabase::class.java,
+                    "db_cards"
+                ).build()
+            }
+            return instance
+        }
     }
 }

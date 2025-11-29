@@ -1,4 +1,4 @@
-package ru.smak.lazyelems.db
+package ru.smak.lazyelems.db.internal
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.fromColorLong

@@ -1,6 +1,7 @@
 package ru.smak.lazyelems
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,18 +14,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -33,12 +30,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeCompilerApi
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,9 +54,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ru.smak.lazyelems.db.Card
-import ru.smak.lazyelems.db.CardColor
-import ru.smak.lazyelems.db.CardInfo
+import ru.smak.lazyelems.db.internal.Card
+import ru.smak.lazyelems.db.internal.CardColor
+import ru.smak.lazyelems.db.internal.CardInfo
 import ru.smak.lazyelems.ui.theme.LazyElemsTheme
 import ru.smak.lazyelems.viewmodels.MainViewModel
 import ru.smak.lazyelems.viewmodels.Pages
@@ -72,6 +73,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val values = viewModel.cards.collectAsState(listOf())
             LazyElemsTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -84,6 +86,7 @@ class MainActivity : ComponentActivity() {
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 titleContentColor = MaterialTheme.colorScheme.onPrimary,
                                 navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                                actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             navigationIcon = {
                                 if (viewModel.page != Pages.MAIN) {
@@ -97,6 +100,24 @@ class MainActivity : ComponentActivity() {
                                             contentDescription = stringResource(R.string.back)
                                         )
                                     }
+                                }
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = { viewModel.showColorMenu = !viewModel.showColorMenu }
+                                ) {
+                                    Icon(painterResource(R.drawable.baseline_menu_24),
+                                        stringResource(R.string.color_select)
+                                    )
+                                }
+                                ColorSelector(
+                                    viewModel.colors.map{ it.color },
+                                    viewModel.selectedColor,
+                                    viewModel.showColorMenu,
+                                    onDismiss = { viewModel.showColorMenu = false }
+                                ) {
+                                    viewModel.selectedColor = it
+                                    viewModel.showColorMenu = false
                                 }
                             }
                         )
@@ -130,7 +151,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             Pages.LIST -> ListContent(
-                                viewModel.values,
+                                values.value,
                                 modifier = Modifier
                                     .background(MaterialTheme.colorScheme.primaryContainer)
                                     .padding(innerPadding)
@@ -189,8 +210,10 @@ fun ListContent(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Adaptive(250.dp)
             ) {
-                items(list.reversed()){ item ->
-                    CardWithValue(item, modifier = Modifier.fillMaxWidth().padding(8.dp))
+                items(list){ item ->
+                    CardWithValue(item, modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp))
                 }
             }
         }
@@ -202,15 +225,10 @@ fun ListContent(
 fun ListContentPreview(){
     LazyElemsTheme {
         ListContent(
-            listOf(
-//                1 to "some text 1",
-//                2 to "some text 2",
-//                3 to "some text 3",
-//                4 to "some text 4. It will be a long text",
-//                5 to "some text 5",
-//                6 to "some text 6",
-            ),
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer)
+            listOf(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primaryContainer)
         )
     }
 }
@@ -222,13 +240,15 @@ fun CardWithValue(
 ){
     ElevatedCard(
         modifier = modifier,
-        colors = CardDefaults.elevatedCardColors(containerColor = value.color?.value ?: Color.Unspecified)
+        colors = CardDefaults.elevatedCardColors(containerColor = value.cardColor?.color ?: Color.Unspecified)
     ) {
         val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT)
         val date = formatter.format(value.card.modified)
         Text(
             value.card.title,
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             textAlign = TextAlign.Center,
             fontSize = 24.sp,
             fontWeight = FontWeight.Black,
@@ -236,7 +256,9 @@ fun CardWithValue(
         HorizontalDivider(modifier = Modifier.fillMaxWidth(), 1.dp)
         Text(
             value.card.text,
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             textAlign = TextAlign.Start,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
@@ -244,7 +266,9 @@ fun CardWithValue(
         HorizontalDivider(modifier = Modifier.fillMaxWidth(), 1.dp)
         Text(
             text = date,
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
             color = MaterialTheme.colorScheme.secondary,
             fontSize = 12.sp,
             textAlign = TextAlign.End,
@@ -256,7 +280,7 @@ fun CardWithValue(
 @Composable
 fun CardWithValuePreview(){
     LazyElemsTheme {
-        CardWithValue(CardInfo(Card(title = "Заголовок", text = "Текст карточки"), CardColor(value = Color.Yellow)))
+        CardWithValue(CardInfo(Card(title = "Заголовок", text = "Текст карточки"), CardColor(color = Color.Yellow)))
     }
 }
 
@@ -286,7 +310,7 @@ fun TextDialog(
                         userTitle = it
                     },
                     placeholder = {
-                        Text("Заголовок заметки")
+                        Text(stringResource(R.string.title_placeholder))
                     },
                 )
                 OutlinedTextField(
@@ -295,7 +319,7 @@ fun TextDialog(
                         userText = it
                     },
                     placeholder = {
-                        Text("Текст заметки")
+                        Text(stringResource(R.string.text_placeholder))
                     },
                 )
             }
@@ -303,11 +327,58 @@ fun TextDialog(
     )
 }
 
-
 @Preview
 @Composable
 fun TextDialogPreview(){
     LazyElemsTheme {
         TextDialog()
+    }
+}
+
+@Composable
+fun ColorSelector(
+    colors: List<Color>,
+    selectedColor: Color,
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit = {},
+    onSelect: (Color) -> Unit = {},
+){
+    DropdownMenu(
+        expanded,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        colors.forEachIndexed { index, color ->
+            DropdownMenuItem(
+                text = {
+                    Text((index + 1).toString())
+                },
+                onClick = {
+                    onSelect(color)
+                },
+                trailingIcon = {
+                    Icon(painter = painterResource(
+                        if (color == selectedColor) R.drawable.baseline_check_circle_24 else R.drawable.baseline_circle_48
+                    ), null, tint = color)
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = if (color == selectedColor) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ColorSelectorExpandedPreview(){
+    MaterialTheme {
+        ColorSelector(
+            listOf(Color.White, Color.Red, Color.Yellow, Color.Green),
+            Color.White,
+            true,
+        )
     }
 }

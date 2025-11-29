@@ -9,35 +9,60 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import ru.smak.lazyelems.db.Card
-import ru.smak.lazyelems.db.CardColor
+import ru.smak.lazyelems.db.internal.Card
+import ru.smak.lazyelems.db.internal.CardColor
 import ru.smak.lazyelems.db.CardDatabase
-import ru.smak.lazyelems.db.CardInfo
+import ru.smak.lazyelems.db.internal.CardInfo
+import ru.smak.lazyelems.db.CardInfoRepositoryImpl
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
-    val values = mutableStateListOf<CardInfo>()
+    private val cardInfoRepository = CardInfoRepositoryImpl(
+        CardDatabase.getInstance(getApplication())
+    )
+
+    private val _cards = MutableStateFlow<List<CardInfo>>(listOf())
+    val cards: StateFlow<List<CardInfo>> = _cards.asStateFlow()
+
     var showDialog by mutableStateOf(false)
+    var showColorMenu by mutableStateOf(false)
+    val colors = mutableStateListOf(
+        CardColor(1, Color.White),
+        CardColor(2, Color.Red),
+        CardColor(3, Color.Yellow),
+        CardColor(4, Color.Green),
+    )
+    var _selectedColor by mutableStateOf(Color.Unspecified)
+
+    var selectedColor: Color
+        get() = _selectedColor
+        set(value){
+            _selectedColor = value
+            viewModelScope.launch {
+                cardInfoRepository.getAllCardsByColor(value)?.collectLatest { newCards ->
+                    _cards.value = newCards.cards.map{ CardInfo(it, newCards.cardColor) }
+                }
+            }
+
+        }
 
     var page: Pages by mutableStateOf(Pages.MAIN)
 
     init {
-        CardDatabase.initDb(getApplication())
-        viewModelScope.launch(Dispatchers.IO){
-            CardDatabase.colorDao?.apply {
-                get(1) ?: add(CardColor(1, Color.Unspecified))
-                get(2) ?: add(CardColor(2, Color.Red))
-                get(3) ?: add(CardColor(3, Color.Yellow))
-                get(4) ?: add(CardColor(4, Color.Green))
-            }
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            CardDatabase.cardsDao?.getAllCardsInfo()?.collect { it ->
-                values.apply {
-                    clear()
-                    addAll(it)
+        viewModelScope.launch{
+            cardInfoRepository.apply {
+                colors.forEach {
+                    this.getColorById(it.id) ?: addColor(CardColor(it.id, it.color))
                 }
+            }
+            cardInfoRepository.getAllCardsInfo().collectLatest { initialCards ->
+                _cards.value = initialCards
             }
         }
     }
@@ -51,8 +76,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun addValue(title: String, text: String){
-        viewModelScope.launch(Dispatchers.IO) {
-            CardDatabase.cardsDao?.insert(
+        viewModelScope.launch {
+            cardInfoRepository.addCard(
                 Card(title = title, text = text, colorId = (1..4).random())
             )
         }

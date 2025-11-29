@@ -6,4 +6,7 @@
     <string name="back">Назад</string>
     <string name="to_list">Посмотреть список</string>
     <string name="list_content">Здесь будет список</string>
+    <string name="title_placeholder">Заголовок заметки</string>
+    <string name="text_placeholder">Текст заметки</string>
+    <string name="color_select">Выбор цвета</string>
 </resources>

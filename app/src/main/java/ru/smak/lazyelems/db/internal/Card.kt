@@ -1,16 +1,17 @@
-package ru.smak.lazyelems.db
+package ru.smak.lazyelems.db.internal
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
 @Entity(
     tableName = "card",
     indices = [
-
+        Index("colorId", name = "color_idx", unique = false)
     ],
     foreignKeys = [
         ForeignKey(
