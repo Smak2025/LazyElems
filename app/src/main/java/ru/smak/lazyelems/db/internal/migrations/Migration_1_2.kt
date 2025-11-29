@@ -19,9 +19,9 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
             `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             `title` TEXT NOT NULL,
             `text` TEXT NOT NULL,
-            `colorId` INTEGER NOT NULL DEFAULT 1,
+            `color_id` INTEGER NOT NULL DEFAULT 1,
             `modification_date` INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-            FOREIGN KEY(`colorId`) REFERENCES `colors`(`id`)
+            FOREIGN KEY(`color_id`) REFERENCES `card_color`(`id`)
                 ON UPDATE CASCADE
                 ON DELETE RESTRICT
         )
@@ -29,7 +29,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 
         // 3. Переносим данные из старой таблицы card (без colorId и modification_date)
         db.execSQL("""
-        INSERT INTO `card_new` (`id`, `title`, `text`, `colorId`, `modification_date`)
+        INSERT INTO `card_new` (`id`, `title`, `text`, `color_id`, `modification_date`)
         SELECT 
             `id`, 
             `title`, 
@@ -46,6 +46,6 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("ALTER TABLE `card_new` RENAME TO `card`")
 
         // 6. Создаём индекс (ROOM сам его создаст, но можно явно)
-        db.execSQL("CREATE INDEX IF NOT EXISTS `color_idx` ON `card` (`colorId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `color_idx` ON `card` (`color_id`)")
     }
 }
