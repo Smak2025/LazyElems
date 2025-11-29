@@ -55,6 +55,8 @@ import ru.smak.lazyelems.db.Card
 import ru.smak.lazyelems.ui.theme.LazyElemsTheme
 import ru.smak.lazyelems.viewmodels.MainViewModel
 import ru.smak.lazyelems.viewmodels.Pages
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
@@ -179,9 +181,9 @@ fun ListContent(
         if (list.isEmpty()) {
             Text(stringResource(R.string.list_content))
         } else {
-            LazyVerticalStaggeredGrid(
+            LazyVerticalGrid (
                 modifier = Modifier.fillMaxSize(),
-                columns = StaggeredGridCells.Adaptive(128.dp),
+                columns = GridCells.Adaptive(250.dp)
             ) {
                 items(list.reversed()){ item ->
                     CardWithValue(item, modifier = Modifier.fillMaxWidth().padding(8.dp))
@@ -217,6 +219,8 @@ fun CardWithValue(
     ElevatedCard(
         modifier = modifier
     ) {
+        val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT)
+        val date = formatter.format(value.modified)
         Text(
             value.title,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -232,6 +236,14 @@ fun CardWithValue(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
         )
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), 1.dp)
+        Text(
+            text = date,
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            color = MaterialTheme.colorScheme.secondary,
+            fontSize = 12.sp,
+            textAlign = TextAlign.End,
+        )
     }
 }
 
@@ -239,7 +251,7 @@ fun CardWithValue(
 @Composable
 fun CardWithValuePreview(){
     LazyElemsTheme {
-        //CardWithValue(3 to "some text", modifier = Modifier.fillMaxWidth())
+        CardWithValue(Card(title = "Заголовок", text = "Текст карточки"))
     }
 }
 
@@ -267,13 +279,19 @@ fun TextDialog(
                     value = userTitle,
                     onValueChange = {
                         userTitle = it
-                    }
+                    },
+                    placeholder = {
+                        Text("Заголовок заметки")
+                    },
                 )
                 OutlinedTextField(
                     value = userText,
                     onValueChange = {
                         userText = it
-                    }
+                    },
+                    placeholder = {
+                        Text("Текст заметки")
+                    },
                 )
             }
         },
