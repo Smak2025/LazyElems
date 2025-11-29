@@ -1,6 +1,5 @@
 package ru.smak.lazyelems.db
 
-import androidx.compose.ui.graphics.Color
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -10,11 +9,14 @@ import java.time.LocalDateTime
 
 @Entity(
     tableName = "card",
+    indices = [
+
+    ],
     foreignKeys = [
         ForeignKey(
-            Colors::class,
+            CardColor::class,
             ["id"],
-            ["color"],
+            ["colorId"],
             onDelete = ForeignKey.RESTRICT,
             onUpdate = CASCADE,
         )
@@ -26,7 +28,7 @@ data class Card(
     @ColumnInfo(name = "title")
     var title: String,
     var text: String,
-    var color: Int = 0,
+    var colorId: Int = 0,
     @ColumnInfo(name = "modification_date")
     var modified: LocalDateTime = LocalDateTime.now()
 )

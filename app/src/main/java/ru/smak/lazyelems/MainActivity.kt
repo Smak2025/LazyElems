@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -44,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +54,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.smak.lazyelems.db.Card
+import ru.smak.lazyelems.db.CardColor
+import ru.smak.lazyelems.db.CardInfo
 import ru.smak.lazyelems.ui.theme.LazyElemsTheme
 import ru.smak.lazyelems.viewmodels.MainViewModel
 import ru.smak.lazyelems.viewmodels.Pages
@@ -170,7 +174,7 @@ fun MainContent(
 
 @Composable
 fun ListContent(
-    list: List<Card>,
+    list: List<CardInfo>,
     modifier: Modifier = Modifier,
 ){
     Column(
@@ -213,16 +217,17 @@ fun ListContentPreview(){
 
 @Composable
 fun CardWithValue(
-    value: Card,
+    value: CardInfo,
     modifier: Modifier = Modifier,
 ){
     ElevatedCard(
-        modifier = modifier
+        modifier = modifier,
+        colors = CardDefaults.elevatedCardColors(containerColor = value.color?.value ?: Color.Unspecified)
     ) {
         val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.SHORT)
-        val date = formatter.format(value.modified)
+        val date = formatter.format(value.card.modified)
         Text(
-            value.title,
+            value.card.title,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             textAlign = TextAlign.Center,
             fontSize = 24.sp,
@@ -230,7 +235,7 @@ fun CardWithValue(
         )
         HorizontalDivider(modifier = Modifier.fillMaxWidth(), 1.dp)
         Text(
-            value.text,
+            value.card.text,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             textAlign = TextAlign.Start,
             fontSize = 14.sp,
@@ -251,7 +256,7 @@ fun CardWithValue(
 @Composable
 fun CardWithValuePreview(){
     LazyElemsTheme {
-        CardWithValue(Card(title = "Заголовок", text = "Текст карточки"))
+        CardWithValue(CardInfo(Card(title = "Заголовок", text = "Текст карточки"), CardColor(value = Color.Yellow)))
     }
 }
 

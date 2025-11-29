@@ -6,11 +6,11 @@ import androidx.room.TypeConverter
 
 class ColorConverter {
     @TypeConverter
-    fun ColorToLong(value: Color?): Long? =
+    fun colorToLong(value: Color?): Long? =
         value?.value?.toLong()
 
     @TypeConverter
-    fun LongToColor(value: Long?): Color? = value?.let {
+    fun longToColor(value: Long?): Color? = value?.let {
         Color.fromColorLong(value)
     }
 
